@@ -27,7 +27,7 @@ There is **no free official public API** from Indian Railways / CRIS / IRCTC. Th
 
 The app never invents train details: wrong-number / broken responses are rejected and shown as `TRAIN NOT FOUND` or an error. Timetable ≠ live status – live status links to NTES.
 
-**Setup:** get a free key at railradar.in → Vercel project → Settings → Environment Variables → add `RAILRADAR_API_KEY` → Redeploy. The key stays on the server.
+**Setup (easy):** get a free key at railradar.in → Tatkal AI → **Settings** → *Train search key* → paste → **Save key**. Stored only on that phone (not in backups) and sent only to this app's own `/api/train`. **Or** (server-wide): Vercel → Settings → Environment Variables → `RAILRADAR_API_KEY` → Redeploy; this takes priority.
 
 ## Run
 ```bash

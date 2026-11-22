@@ -1,6 +1,7 @@
 // Vercel serverless function: GET /api/train?no=12115
-// Looks up a train's timetable from RailRadar using the RAILRADAR_API_KEY environment variable.
-// The key stays on the server and is never sent to the browser. No user data is stored or logged.
+// Looks up a train's timetable from RailRadar.
+// Key: RAILRADAR_API_KEY environment variable, or else the user's own key sent from the app in the
+// X-RailRadar-Key header (saved only on their phone). The key is never stored or logged here.
 import { normalizeTrain } from './_lib/railradar.js';
 
 const MEM_TTL = 6 * 3_600_000;
@@ -15,7 +16,8 @@ export default async function handler(req, res) {
   const no = String(req.query?.no ?? '').trim();
   if (!/^\d{5}$/.test(no)) return send(res, 400, { ok: false, code: 'INVALID', message: 'Train number must be 5 digits' });
 
-  const key = process.env.RAILRADAR_API_KEY;
+  const fromUser = String(req.headers?.['x-railradar-key'] ?? '').trim();
+  const key = process.env.RAILRADAR_API_KEY || (/^[A-Za-z0-9._~+/=-]{8,200}$/.test(fromUser) ? fromUser : '');
   if (!key) return send(res, 503, { ok: false, code: 'NO_KEY', message: 'Train search is not set up yet (API key missing)' });
 
   const hit = mem.get(no);

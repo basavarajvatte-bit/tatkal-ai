@@ -3,6 +3,36 @@ import { useData, saveSettings, replaceAll, clearAll, getData, cleanReminderMinu
 import { syncClock } from '../lib/clock';
 import { askPermission, notify, permission } from '../lib/notify';
 import { Card, SyncStatus } from '../components/ui';
+import { getApiKey, setApiKey } from '../lib/trainData';
+
+function ApiKeyCard() {
+  const [saved, setSaved] = useState(() => !!getApiKey());
+  const [val, setVal] = useState('');
+  return (
+    <Card title="Train search key (RailRadar)">
+      <p className="small">{saved ? 'Key save hai ✓ Train search chalega.' : 'Abhi koi key nahi hai. RailRadar se mili key yahan paste karo.'}</p>
+      <label className="field">
+        <span>{saved ? 'Nayi key (badalni ho toh)' : 'API key'}</span>
+        <input type="password" autoComplete="off" autoCapitalize="off" spellCheck={false} value={val} placeholder="Yahan paste karo" onChange={(e) => setVal(e.target.value)} />
+      </label>
+      <div className="grid2 mt">
+        <button
+          className="btn btn-primary"
+          disabled={val.trim().length < 8}
+          onClick={() => {
+            setApiKey(val);
+            setVal('');
+            setSaved(true);
+          }}
+        >
+          Save key
+        </button>
+        <button className="btn btn-danger" disabled={!saved} onClick={() => { setApiKey(''); setSaved(false); }}>Remove key</button>
+      </div>
+      <p className="muted small">Key sirf is phone mein rehti hai, backup file mein nahi jaati. Search ke time sirf aapke app ke server se RailRadar tak jaati hai.</p>
+    </Card>
+  );
+}
 
 type BIPEvent = Event & { prompt: () => Promise<void> };
 
@@ -59,6 +89,8 @@ export default function Settings() {
         <SyncStatus />
         <p className="muted small">Booking timezone: Asia/Kolkata (IST). Countdown uses server time, not just your phone clock, and keeps running offline.</p>
       </Card>
+
+      <ApiKeyCard />
 
       <Card title="Notifications">
         <label className="check">

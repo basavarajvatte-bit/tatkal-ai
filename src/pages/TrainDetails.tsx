@@ -51,14 +51,15 @@ export default function TrainDetails({ no }: { no: string }) {
               <h2>Details abhi nahi mil payi</h2>
               <p className="small">
                 {err?.code === 'NO_KEY'
-                  ? 'Train search ki key abhi Vercel mein nahi daali gayi hai.'
+                  ? 'Train search ki key abhi nahi daali gayi hai. Settings mein RailRadar key daalo.'
                   : err?.code === 'LIMIT'
                     ? 'Is mahine ki free search limit khatam ho gayi.'
                     : err?.code === 'KEY_REJECTED'
-                      ? 'Train data wali key galat hai ya band ho gayi hai.'
+                      ? 'RailRadar key galat hai ya band ho gayi hai. Settings mein sahi key daalo.'
                       : err?.message ?? 'Kuch gadbad hui.'}
               </p>
               <p className="muted small">Official NTES site pe train dekho, phir journey khud bhar lo.</p>
+              {(err?.code === 'NO_KEY' || err?.code === 'KEY_REJECTED') && <a className="btn btn-primary btn-block mb" href="#/settings">Settings mein key daalo</a>}
               <button className="btn btn-sm" onClick={() => load(true)} disabled={loading}>{loading ? 'Try ho raha hai…' : 'Phir se try karo'}</button>
             </>
           )}

@@ -41,6 +41,25 @@ export interface SearchResult {
 }
 
 const KEY = 'tatkal-ai:trains:v1';
+const API_KEY = 'tatkal-ai:railradar-key';
+
+/** User's own RailRadar key, kept only on this device (not in backups). */
+export function getApiKey(): string {
+  try {
+    return localStorage.getItem(API_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+export function setApiKey(v: string) {
+  try {
+    const k = v.trim();
+    if (k) localStorage.setItem(API_KEY, k);
+    else localStorage.removeItem(API_KEY);
+  } catch {
+    /* storage blocked */
+  }
+}
 const FRESH_MS = 24 * 3_600_000; // reuse without asking the server
 export const STALE_MS = 7 * 24 * 3_600_000; // warn after this
 const MAX_SAVED = 40;
@@ -90,7 +109,8 @@ export async function searchTrain(no: string, force = false): Promise<SearchResu
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 15_000);
   try {
-    const r = await fetch(`/api/train?no=${no}`, { signal: ctl.signal });
+    const key = getApiKey();
+    const r = await fetch(`/api/train?no=${no}`, { signal: ctl.signal, headers: key ? { 'X-RailRadar-Key': key } : {} });
     const body = await r.json().catch(() => null);
     if (r.ok && body?.ok && isTrain(body.train) && body.train.number === no) {
       writeOne(body.train);
