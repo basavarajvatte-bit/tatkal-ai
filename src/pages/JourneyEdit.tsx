@@ -1,20 +1,12 @@
 import { useMemo, useState } from 'react';
 import type { Berth, ClassCode, Gender, Journey, Passenger, Quota, Train } from '../lib/types';
-import { blankJourney, getData, saveJourney, uid, opening } from '../lib/store';
+import { blankJourney, getData, saveJourney, uid, opening, useData } from '../lib/store';
+import { BERTHS } from '../lib/labels';
 import { CLASSES, fmtDate, fmtHour, isValidISODate, istDate, addDays } from '../lib/time';
 import { clean, journeyErrors, MAX_TATKAL_PASSENGERS, passengerErrors, trainErrors } from '../lib/validate';
 import { now } from '../lib/clock';
 import { Card } from '../components/ui';
 
-const BERTHS: { v: Berth; l: string }[] = [
-  { v: 'NP', l: 'No preference' },
-  { v: 'LB', l: 'Lower' },
-  { v: 'MB', l: 'Middle' },
-  { v: 'UB', l: 'Upper' },
-  { v: 'SL', l: 'Side lower' },
-  { v: 'SU', l: 'Side upper' },
-  { v: 'WS', l: 'Window (chair car)' },
-];
 const QUOTAS: { v: Quota; l: string }[] = [
   { v: 'TQ', l: 'Tatkal (TQ)' },
   { v: 'PT', l: 'Premium Tatkal (PT)' },
@@ -33,12 +25,17 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-export default function JourneyEdit({ id }: { id: string }) {
+export default function JourneyEdit({ id, prefillTrain }: { id: string; prefillTrain?: string }) {
+  const { profiles, groups } = useData();
   const initial = useMemo<Journey | null>(() => {
-    if (id === 'new') return blankJourney();
+    if (id === 'new') {
+      const b = blankJourney();
+      if (prefillTrain && /^\d{5}$/.test(prefillTrain)) b.trains = [{ ...blankTrain(), number: prefillTrain }];
+      return b;
+    }
     const found = getData().journeys.find((x) => x.id === id);
     return found ? structuredClone(found) : null;
-  }, [id]);
+  }, [id, prefillTrain]);
   const [j, setJ] = useState<Journey | null>(initial);
   const [tried, setTried] = useState(false);
 
@@ -180,6 +177,28 @@ export default function JourneyEdit({ id }: { id: string }) {
         )}
       >
         <p className="muted small">Name exactly as on ID proof. Saved only on this device.</p>
+        {groups.length > 0 && (
+          <label className="field">
+            <span>Saved group se bharo</span>
+            <select
+              value={j.groupId ?? ''}
+              onChange={(e) => {
+                const g = groups.find((x) => x.id === e.target.value);
+                if (!g) return set({ groupId: undefined });
+                const list = g.profileIds.map((pid) => profiles.find((p) => p.id === pid && p.active)).filter((p): p is NonNullable<typeof p> => !!p).slice(0, MAX_TATKAL_PASSENGERS);
+                if (!list.length) return;
+                set({
+                  groupId: g.id,
+                  profileIds: list.map((p) => p.id),
+                  passengers: list.map((p) => ({ id: uid(), name: p.name, age: p.age, gender: p.gender, berth: p.berth, food: p.food })),
+                });
+              }}
+            >
+              <option value="">— Group chuno —</option>
+              {groups.map((g) => <option key={g.id} value={g.id}>{g.name} ({g.profileIds.length})</option>)}
+            </select>
+          </label>
+        )}
         {errs.passengers && <em className="err">{errs.passengers}</em>}
         {j.passengers.map((p, i) => (
           <div className="subcard" key={p.id}>

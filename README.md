@@ -5,14 +5,29 @@ Fast, legitimate Tatkal booking **assistant** (PWA). Separate app – not connec
 - Accurate IST countdown (AC 10:00, non-AC 11:00), server-time sync, clock-drift and latency display, works offline
 - Multiple journeys, up to 4 passengers, preferred + 3 backup trains, readiness score with one-tap fixes
 - Booking mode (checklist → final report → countdown → big OPEN IRCTC button), instant backup-train switch, copy passenger list
-- Reminders at 15/5/2/1/0 min, booking history (your own records), JSON backup/restore, installable PWA
+- **Train number search** (v1.1): enter a 5-digit number → name, type, route with every halting station (arr/dep/halt/day/km/platform), running days, classes, distance, duration, data source + last-updated time. `TRAIN NOT FOUND` for invalid numbers. Saved on the device for instant repeat searches; old copies are labelled.
+- **BOOK THIS TRAIN → booking plan**: boarding/destination picked from the real route (destination must come after boarding), class from the train's real classes, warns if the train doesn't run on that date, Tatkal date counted from the train's start date at its origin
+- **Passenger profiles & groups**: save / edit / delete / activate-deactivate passengers, save groups (Family, Friends…), plans restore the chosen passengers when reopened
+- Plans can be activated/deactivated (inactive = no reminders)
+- Reminders default 45/15/1/0 min before opening (non-AC 10:15, 10:45, 10:59, 11:00; AC 9:15, 9:45, 9:59, 10:00), changeable in Settings
+- Booking history (your own records), JSON backup/restore, installable PWA
 
 **Privacy:** all data stays in the browser on your device. No account, no server copy. Passwords, OTPs, CVV, UPI PIN and Aadhaar numbers are never asked for or stored.
 
 **Fair use:** no auto-login, CAPTCHA solving, OTP reading, form filling, payment or booking automation. You book on the official IRCTC site/app. No fake availability – train data is what you save from official sources (IRCTC / NTES). Not affiliated with IRCTC.
 
 ## Stack
-React 19 + TypeScript + Vite, plain CSS, hand-written service worker, one Vercel function (`api/time.js`) for server time. No paid services.
+React 19 + TypeScript + Vite, plain CSS, hand-written service worker, Vercel functions: `api/time.js` (server time) and `api/train.js` (train lookup). No paid services.
+
+## Train data
+There is **no free official public API** from Indian Railways / CRIS / IRCTC. The government open-data timetable on data.gov.in is from ~2015 and out of date. So:
+
+1. **Automatic:** `api/train.js` asks [RailRadar](https://railradar.in/docs) (independent, *not* Indian Railways; free plan ≈ 100 requests/month). Results are cached on Vercel's CDN for a day and on the phone, so repeat searches don't use the quota.
+2. **Fallback:** if the lookup fails (no key, limit reached, provider down, offline) the app says so and offers **NTES ↗** (official) and **Khud bharo** (manual journey with the train number pre-filled).
+
+The app never invents train details: wrong-number / broken responses are rejected and shown as `TRAIN NOT FOUND` or an error. Timetable ≠ live status – live status links to NTES.
+
+**Setup:** get a free key at railradar.in → Vercel project → Settings → Environment Variables → add `RAILRADAR_API_KEY` → Redeploy. The key stays on the server.
 
 ## Run
 ```bash
@@ -25,5 +40,7 @@ Deploy: import the repo in Vercel (framework: Vite). No environment variables ne
 
 ## Known limits
 - No free official API for live seat availability, so it is not shown.
-- Reminders fire while the app is open or recently used. Fully-closed background push needs a push server (future).
+- Reminders fire while the app is open or recently used. Fully-closed background push needs a push server + database (not free) – not built, so delivery is not guaranteed.
+- Passenger data is kept only in this browser (localStorage). It is not encrypted at rest, because the key would have to live on the same device; the protection is that it never leaves the phone. Use "Delete all data" in Settings to wipe it.
+- Premium Tatkal availability per train is not in the data, so the app only warns to check IRCTC.
 - iPhone notifications need the app added to the Home Screen (iOS 16.4+).

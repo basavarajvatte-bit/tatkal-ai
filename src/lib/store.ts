@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { AppData, Booking, Journey, Settings } from './types';
+import type { AppData, Booking, Journey, PaxGroup, Profile, Settings } from './types';
 import { tatkalOpening, istDate } from './time';
 import { now } from './clock';
 
@@ -13,8 +13,17 @@ const EMPTY: AppData = {
   version: 1,
   journeys: [],
   bookings: [],
-  settings: { notifications: true, preferredArrival: '08:00' },
+  profiles: [],
+  groups: [],
+  settings: { notifications: true, preferredArrival: '08:00', reminderMinutes: [45, 15, 1, 0] },
 };
+
+/** Valid reminder list: whole minutes 0–180, unique, largest first, max 8. */
+export function cleanReminderMinutes(v: unknown): number[] {
+  if (!Array.isArray(v)) return [...EMPTY.settings.reminderMinutes];
+  const list = [...new Set(v.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 180))].sort((a, b) => b - a).slice(0, 8);
+  return list.length ? list : [...EMPTY.settings.reminderMinutes];
+}
 
 function load(): AppData {
   try {
@@ -32,7 +41,11 @@ export function sanitize(input: unknown): AppData {
     version: 1,
     journeys: Array.isArray(d.journeys) ? d.journeys.filter((j) => j && typeof j.id === 'string') : [],
     bookings: Array.isArray(d.bookings) ? d.bookings.filter((b) => b && typeof b.id === 'string') : [],
-    settings: { ...EMPTY.settings, ...(d.settings ?? {}) },
+    profiles: Array.isArray(d.profiles) ? d.profiles.filter((p) => p && typeof p.id === 'string').map((p) => ({ ...p, active: p.active !== false })) : [],
+    groups: Array.isArray(d.groups)
+      ? d.groups.filter((g) => g && typeof g.id === 'string' && Array.isArray(g.profileIds)).map((g) => ({ id: g.id, name: String(g.name ?? '').slice(0, 30), profileIds: g.profileIds.filter((x) => typeof x === 'string') }))
+      : [],
+    settings: { ...EMPTY.settings, ...(d.settings ?? {}), reminderMinutes: cleanReminderMinutes(d.settings?.reminderMinutes) },
   };
 }
 
@@ -97,6 +110,36 @@ export function duplicateJourney(id: string): string | null {
   return copy.id;
 }
 
+export function setJourneyActive(id: string, active: boolean) {
+  commit({ ...data, journeys: data.journeys.map((x) => (x.id === id ? { ...x, active, updatedAt: Date.now() } : x)) });
+}
+
+/* ---------- Passenger profiles & groups ---------- */
+
+export function saveProfile(p: Profile) {
+  const exists = data.profiles.some((x) => x.id === p.id);
+  const profiles = exists ? data.profiles.map((x) => (x.id === p.id ? p : x)) : [...data.profiles, p];
+  commit({ ...data, profiles });
+}
+
+export function deleteProfile(id: string) {
+  commit({
+    ...data,
+    profiles: data.profiles.filter((x) => x.id !== id),
+    groups: data.groups.map((g) => ({ ...g, profileIds: g.profileIds.filter((x) => x !== id) })),
+  });
+}
+
+export function saveGroup(g: PaxGroup) {
+  const exists = data.groups.some((x) => x.id === g.id);
+  const groups = exists ? data.groups.map((x) => (x.id === g.id ? g : x)) : [...data.groups, g];
+  commit({ ...data, groups });
+}
+
+export function deleteGroup(id: string) {
+  commit({ ...data, groups: data.groups.filter((x) => x.id !== id) });
+}
+
 export function setDefaultJourney(id: string) {
   commit({ ...data, journeys: data.journeys.map((x) => ({ ...x, isDefault: x.id === id })) });
 }
@@ -131,7 +174,7 @@ export function opening(j: Journey) {
 export function upcomingJourneys(list: Journey[], at = now()): Journey[] {
   const today = istDate(at);
   return list
-    .filter((j) => j.journeyDate >= today)
+    .filter((j) => j.journeyDate >= today && j.active !== false)
     .sort((a, b) => opening(a).epoch - opening(b).epoch);
 }
 
@@ -159,6 +202,7 @@ export function blankJourney(): Journey {
     passengers: [{ id: uid(), name: '', age: null, gender: '', berth: 'NP' }],
     checks: { irctcAccount: false, aadhaar: false, payment: false },
     isDefault: data.journeys.length === 0,
+    active: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

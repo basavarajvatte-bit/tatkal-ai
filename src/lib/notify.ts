@@ -4,7 +4,16 @@ import { now } from './clock';
  * Reminders fire while the app is open (or kept in the background by the browser).
  * Background delivery when the app is fully closed needs a push server – not promised here.
  */
-export const REMINDER_MINUTES = [15, 5, 2, 1, 0] as const;
+export const DEFAULT_REMINDER_MINUTES = [45, 15, 1, 0];
+
+/** Text for a reminder `m` minutes before opening. */
+export function reminderText(m: number, label: string): { title: string; body: string } {
+  if (m === 0) return { title: 'Tatkal booking is OPEN', body: `${label}: open IRCTC now` };
+  if (m === 45) return { title: '45 min to Tatkal', body: `Sir, your Tatkal booking opens in 45 minutes. Please get ready. (${label})` };
+  if (m === 15) return { title: '15 min to Tatkal', body: `Your Tatkal booking opens in 15 minutes. Check your journey and passenger details. (${label})` };
+  if (m === 1) return { title: '1 min to Tatkal', body: `Your Tatkal booking opens in 1 minute. Open IRCTC now. (${label})` };
+  return { title: `${m} min to Tatkal`, body: `Your Tatkal booking opens in ${m} minutes. (${label})` };
+}
 
 export type Toast = { id: number; text: string };
 const toastListeners = new Set<(t: Toast) => void>();
@@ -52,10 +61,11 @@ let timers: number[] = [];
 const fired = new Set<string>();
 
 /** (Re)schedule reminders for one booking opening. */
-export function scheduleReminders(openEpoch: number, label: string, incomplete: () => string[]) {
+export function scheduleReminders(openEpoch: number, label: string, incomplete: () => string[], minutes: number[] = DEFAULT_REMINDER_MINUTES) {
   timers.forEach(clearTimeout);
   timers = [];
-  for (const m of REMINDER_MINUTES) {
+  const firstWarn = Math.max(...minutes.filter((m) => m > 0), 0);
+  for (const m of minutes) {
     const at = openEpoch - m * 60_000;
     const delay = at - now();
     const key = `${openEpoch}:${m}`;
@@ -63,13 +73,12 @@ export function scheduleReminders(openEpoch: number, label: string, incomplete: 
     timers.push(
       window.setTimeout(() => {
         fired.add(key);
-        if (m === 0) {
-          void notify('Tatkal booking is OPEN', `${label}: open IRCTC now`);
-          return;
+        const t = reminderText(m, label);
+        void notify(t.title, t.body);
+        if (m > 0 && m === firstWarn) {
+          const miss = incomplete();
+          if (miss.length) void notify('Preparation incomplete', miss.slice(0, 3).join(', '));
         }
-        void notify(`${m} min to Tatkal`, label);
-        const miss = incomplete();
-        if (m === 15 && miss.length) void notify('Preparation incomplete', miss.slice(0, 3).join(', '));
       }, Math.max(0, delay)),
     );
   }

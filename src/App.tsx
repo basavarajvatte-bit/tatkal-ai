@@ -12,13 +12,16 @@ const Trains = lazy(() => import('./pages/Trains'));
 const Booking = lazy(() => import('./pages/Booking'));
 const History = lazy(() => import('./pages/History'));
 const Settings = lazy(() => import('./pages/Settings'));
+const TrainDetails = lazy(() => import('./pages/TrainDetails'));
+const PlanNew = lazy(() => import('./pages/PlanNew'));
+const Passengers = lazy(() => import('./pages/Passengers'));
 
 const NAV = [
   { href: '#/', label: 'Home', icon: '⌂' },
   { href: '#/journeys', label: 'Journeys', icon: '☰' },
   { href: '#/trains', label: 'Trains', icon: '⇄' },
+  { href: '#/passengers', label: 'People', icon: '☺' },
   { href: '#/booking', label: 'Book', icon: '⏱' },
-  { href: '#/history', label: 'History', icon: '✓' },
   { href: '#/settings', label: 'Settings', icon: '⚙' },
 ];
 
@@ -37,12 +40,20 @@ function useHashRoute() {
 }
 
 function Page({ route }: { route: string }) {
-  const parts = route.split('/').filter(Boolean);
+  const [path, qs = ''] = route.split('?');
+  const parts = path.split('/').filter(Boolean);
+  const query = new URLSearchParams(qs);
   switch (parts[0]) {
     case undefined:
       return <Dashboard />;
     case 'journeys':
-      return parts[1] ? <JourneyEdit id={parts[1]} /> : <Journeys />;
+      return parts[1] ? <JourneyEdit key={route} id={parts[1]} prefillTrain={query.get('train') ?? undefined} /> : <Journeys />;
+    case 'train':
+      return <TrainDetails key={parts[1]} no={parts[1] ?? ''} />;
+    case 'plan':
+      return <PlanNew key={parts[1]} no={parts[1] ?? ''} />;
+    case 'passengers':
+      return <Passengers />;
     case 'trains':
       return <Trains />;
     case 'booking':
@@ -79,14 +90,15 @@ function Toasts() {
 function Reminders() {
   const data = useData();
   const j = focusJourney(data.journeys);
-  const key = j ? `${j.id}:${opening(j).epoch}:${data.settings.notifications}` : '';
+  const mins = data.settings.reminderMinutes;
+  const key = j ? `${j.id}:${opening(j).epoch}:${data.settings.notifications}:${mins.join(',')}` : '';
   useEffect(() => {
     if (!j || !data.settings.notifications) return;
     const label = `${j.from} → ${j.to} (${j.travelClass})`;
     scheduleReminders(opening(j).epoch, label, () => {
       const c = getClock();
       return readiness(j, { online: navigator.onLine, clockSynced: c.source !== 'device', irctcReachable: true }).missing.map((m) => m.label);
-    });
+    }, mins);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   return null;
@@ -94,7 +106,7 @@ function Reminders() {
 
 export default function App() {
   const route = useHashRoute();
-  const top = '#/' + (route.split('/').filter(Boolean)[0] ?? '');
+  const top = '#/' + (route.split('?')[0].split('/').filter(Boolean)[0] ?? '');
   return (
     <div className="app">
       <header className="topbar">

@@ -4,6 +4,7 @@ import { Countdown } from '../components/Countdown';
 import { Card, Empty, JourneyLine, OpenIrctcButton, TrainRow } from '../components/ui';
 import { ReadinessList, useReadiness } from '../components/Readiness';
 import { useNow } from '../lib/hooks';
+import { TrainSearch } from '../components/TrainSearch';
 
 export default function Dashboard() {
   const data = useData();
@@ -14,13 +15,15 @@ export default function Dashboard() {
   if (!j)
     return (
       <div className="stack">
+        <TrainSearch />
         <Card>
           <Empty
-            text="No upcoming journey yet. Save your journey once – Tatkal AI will count down to the exact booking time."
-            action={<a className="btn btn-primary btn-block" href="#/journeys/new">+ Create journey</a>}
+            text="Abhi koi booking plan nahi hai. Upar train number search karo aur BOOK THIS TRAIN dabao."
+            action={<a className="btn btn-block" href="#/journeys/new">Ya khud journey bharo</a>}
           />
         </Card>
         <OpenIrctcButton />
+        <QuickLinks />
       </div>
     );
 
@@ -30,6 +33,7 @@ export default function Dashboard() {
 
   return (
     <div className="stack">
+      <TrainSearch />
       <Card className="hero">
         <div className="row between">
           <span className="eyebrow">Next booking</span>
@@ -73,6 +77,16 @@ export default function Dashboard() {
           })}
         </Card>
       )}
+      <QuickLinks />
+    </div>
+  );
+}
+
+function QuickLinks() {
+  return (
+    <div className="grid2">
+      <a className="btn" href="#/passengers">Passengers</a>
+      <a className="btn" href="#/history">Booking history</a>
     </div>
   );
 }

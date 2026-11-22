@@ -3,6 +3,7 @@ import { useData, focusJourney } from '../lib/store';
 import { sortTrains, smartScore, type SortMode } from '../lib/rank';
 import { fmtDate } from '../lib/time';
 import { Card, Empty, IRCTC_URL, TrainRow } from '../components/ui';
+import { TrainSearch } from '../components/TrainSearch';
 
 const NTES_URL = 'https://enquiry.indianrail.gov.in/mntes/';
 
@@ -24,6 +25,7 @@ export default function Trains() {
   return (
     <div className="stack">
       <h1>Find Trains</h1>
+      <TrainSearch />
 
       <Card title="Search official sources">
         <p className="small">

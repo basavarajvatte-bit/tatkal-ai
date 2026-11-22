@@ -168,3 +168,22 @@ input, select, button { font: inherit; color: inherit; }
 
 .toasts { position: fixed; left: 12px; right: 12px; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px); z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
 .toast { pointer-events: auto; max-width: 520px; width: 100%; background: #1d2a44; border: 1px solid var(--accent); padding: 12px 14px; border-radius: 12px; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, .4); }
+
+/* --- Train search & route (v1.1) --- */
+.dim { opacity: .6; }
+.mt { margin-top: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; cursor: pointer; }
+.input-sm { min-height: 40px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: #0d1526; color: var(--text); font-size: 16px; min-width: 0; }
+.search-row { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.search-input {
+  width: 100%; min-height: 56px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line);
+  background: #0d1526; color: var(--text); font-size: 22px; letter-spacing: .12em; text-align: center;
+}
+.search-input::placeholder { font-size: 15px; letter-spacing: .08em; color: var(--muted); }
+.search-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.route { max-height: 60vh; overflow: auto; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; -webkit-overflow-scrolling: touch; }
+.stop { display: grid; grid-template-columns: minmax(84px, 1fr) 44px 44px 34px 24px 38px; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: .82rem; align-items: center; }
+.stop:last-child { border-bottom: 0; }
+.stop-h { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 700; font-size: .72rem; text-transform: uppercase; z-index: 1; }
+.stop-name { min-width: 0; overflow-wrap: anywhere; }

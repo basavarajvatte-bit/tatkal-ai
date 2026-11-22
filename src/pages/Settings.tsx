@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useData, saveSettings, replaceAll, clearAll, getData } from '../lib/store';
+import { useData, saveSettings, replaceAll, clearAll, getData, cleanReminderMinutes } from '../lib/store';
 import { syncClock } from '../lib/clock';
 import { askPermission, notify, permission } from '../lib/notify';
 import { Card, SyncStatus } from '../components/ui';
 
 type BIPEvent = Event & { prompt: () => Promise<void> };
 
+const clock = (min: number) => {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+};
+
 export default function Settings() {
   const { settings } = useData();
   const [perm, setPerm] = useState(permission());
+  const [mins, setMins] = useState(settings.reminderMinutes.join(', '));
   const [install, setInstall] = useState<BIPEvent | null>(null);
   const standalone = matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true;
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -56,8 +63,22 @@ export default function Settings() {
       <Card title="Notifications">
         <label className="check">
           <input type="checkbox" checked={settings.notifications} onChange={(e) => saveSettings({ notifications: e.target.checked })} />
-          <span>Reminders at 15, 5, 2, 1 min and at opening</span>
+          <span>Reminders on</span>
         </label>
+        <label className="field">
+          <span>Kitne minute pehle yaad dilaye (comma se alag, 0 = khulte hi)</span>
+          <input
+            inputMode="numeric"
+            value={mins}
+            onChange={(e) => setMins(e.target.value.replace(/[^\d, ]/g, ''))}
+            onBlur={() => {
+              const list = cleanReminderMinutes(mins.split(/[ ,]+/).filter(Boolean).map(Number));
+              saveSettings({ reminderMinutes: list });
+              setMins(list.join(', '));
+            }}
+          />
+        </label>
+        <p className="muted small">Non-AC (11:00): {settings.reminderMinutes.map((m) => clock(11 * 60 - m)).join(', ')} · AC (10:00): {settings.reminderMinutes.map((m) => clock(10 * 60 - m)).join(', ')}</p>
         <div className="small">Browser permission: <b>{perm}</b></div>
         {perm !== 'granted' && perm !== 'unsupported' && (
           <button className="btn btn-block" onClick={async () => setPerm(await askPermission())}>Allow notifications</button>
@@ -68,6 +89,8 @@ export default function Settings() {
           {ios && ' On iPhone, notifications need the app added to Home Screen (iOS 16.4+).'}
         </p>
       </Card>
+
+      <a className="btn btn-block" href="#/history">Booking history</a>
 
       <Card title="Install app">
         {standalone ? (

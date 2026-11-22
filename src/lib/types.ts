@@ -21,6 +21,17 @@ export interface Passenger {
   food?: string;
 }
 
+/** A saved passenger that can be reused in many booking plans. */
+export interface Profile extends Passenger {
+  active: boolean;
+}
+
+export interface PaxGroup {
+  id: string;
+  name: string;
+  profileIds: string[];
+}
+
 export interface Journey {
   id: string;
   label: string;
@@ -35,6 +46,11 @@ export interface Journey {
   passengers: Passenger[];
   checks: { irctcAccount: boolean; aadhaar: boolean; payment: boolean };
   isDefault: boolean;
+  /** false = plan switched off (no reminders, hidden from "next booking"). Missing = on. */
+  active?: boolean;
+  /** Saved passenger profiles / group chosen for this plan (restored when reopened). */
+  profileIds?: string[];
+  groupId?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -56,11 +72,15 @@ export interface Booking {
 export interface Settings {
   notifications: boolean;
   preferredArrival: string; // HH:MM
+  /** Minutes before Tatkal opening to remind, e.g. [45, 15, 1, 0]. */
+  reminderMinutes: number[];
 }
 
 export interface AppData {
   version: 1;
   journeys: Journey[];
   bookings: Booking[];
+  profiles: Profile[];
+  groups: PaxGroup[];
   settings: Settings;
 }
