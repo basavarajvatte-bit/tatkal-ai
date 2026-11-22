@@ -15,13 +15,14 @@ const Settings = lazy(() => import('./pages/Settings'));
 const TrainDetails = lazy(() => import('./pages/TrainDetails'));
 const PlanNew = lazy(() => import('./pages/PlanNew'));
 const Passengers = lazy(() => import('./pages/Passengers'));
+const Agent = lazy(() => import('./pages/Agent'));
 
 const NAV = [
   { href: '#/', label: 'Home', icon: '⌂' },
   { href: '#/journeys', label: 'Journeys', icon: '☰' },
   { href: '#/trains', label: 'Trains', icon: '⇄' },
   { href: '#/passengers', label: 'People', icon: '☺' },
-  { href: '#/booking', label: 'Book', icon: '⏱' },
+  { href: '#/agent', label: 'Agent', icon: '⏱' },
   { href: '#/settings', label: 'Settings', icon: '⚙' },
 ];
 
@@ -54,6 +55,8 @@ function Page({ route }: { route: string }) {
       return <PlanNew key={parts[1]} no={parts[1] ?? ''} />;
     case 'passengers':
       return <Passengers />;
+    case 'agent':
+      return <Agent key={parts[1] ?? ''} id={parts[1]} />;
     case 'trains':
       return <Trains />;
     case 'booking':

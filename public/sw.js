@@ -54,7 +54,7 @@ self.addEventListener('notificationclick', (e) => {
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       const c = list.find((w) => 'focus' in w);
-      return c ? c.focus() : self.clients.openWindow('/#/booking');
+      return c ? c.focus() : self.clients.openWindow('/#/agent');
     }),
   );
 });

@@ -66,6 +66,8 @@ export interface Booking {
   travelClass: ClassCode;
   status: BookingStatus;
   note: string;
+  /** Booking plan this result belongs to (used to stop duplicate bookings). */
+  journeyId?: string;
   createdAt: number;
 }
 

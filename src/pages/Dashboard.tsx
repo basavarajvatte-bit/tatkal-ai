@@ -48,6 +48,7 @@ export default function Dashboard() {
         </dl>
         <div className="eyebrow center">{opened ? 'Booking window is open' : 'Countdown'}</div>
         <Countdown target={o.epoch} size="xl" />
+        <a className="btn btn-primary btn-block btn-lg mb" href={`#/agent/${j.id}`}>START TATKAL AGENT</a>
         <a className="btn btn-block mb" href={`#/booking/${j.id}`}>Enter Booking Mode</a>
         <OpenIrctcButton big pulse={opened} />
       </Card>

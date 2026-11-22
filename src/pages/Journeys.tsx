@@ -32,6 +32,7 @@ export default function Journeys() {
               Travel {fmtDate(j.journeyDate)} · Opens {j.journeyDate ? `${fmtDate(o.openDate)} ${fmtHour(o.hour)}` : '—'} · {j.passengers.length} pax · {j.trains.some((t) => t.number) ? `Train ${j.trains.map((t) => t.number).filter(Boolean).join(', ')}` : '0 train(s)'}
             </div>
             <div className="actions">
+              <a className="btn btn-sm btn-primary" href={`#/agent/${j.id}`}>Agent</a>
               <a className="btn btn-sm" href={`#/booking/${j.id}`}>Book mode</a>
               <a className="btn btn-sm" href={`#/journeys/${j.id}`}>Edit</a>
               <button

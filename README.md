@@ -10,6 +10,8 @@ Fast, legitimate Tatkal booking **assistant** (PWA). Separate app – not connec
 - **Passenger profiles & groups**: save / edit / delete / activate-deactivate passengers, save groups (Family, Friends…), plans restore the chosen passengers when reopened
 - Plans can be activated/deactivated (inactive = no reminders)
 - Reminders default 45/15/1/0 min before opening (non-AC 10:15, 10:45, 10:59, 11:00; AC 9:15, 9:45, 9:59, 10:00), changeable in Settings
+- **Tatkal Agent** (v1.2, `#/agent`, nav "Agent"): one screen that picks the next plan, re-checks it against the real timetable (train runs that day, class exists, stations on route & in order, boarding day → correct Tatkal date), passengers, backups, internet, clock and IRCTC reachability; shows phase-by-phase instructions + countdown; opens the **official IRCTC Rail Connect app** on Android (`intent:` link to `cris.org.in.prs.ima`, falls back to the website) or the website; final summary + copy passengers (on tap); records the result (PNR / RAC / WL / payment failed / failed) and then blocks a second booking of the same plan. Never switches train or books by itself.
+- Home-screen shortcuts (long-press the installed app icon): Tatkal Agent, Search train
 - Booking history (your own records), JSON backup/restore, installable PWA
 
 **Privacy:** all data stays in the browser on your device. No account, no server copy. Passwords, OTPs, CVV, UPI PIN and Aadhaar numbers are never asked for or stored.
@@ -37,6 +39,9 @@ npm test         # countdown / ranking / validation tests
 npm run build
 ```
 Deploy: import the repo in Vercel (framework: Vite). No environment variables needed.
+
+## Why the agent can't press "Book" for you
+IRCTC gives booking APIs only to licensed agents / partners (B2B/B2C principal service providers, e.g. ixigo, RailYatri), not to personal apps. Using the website's private API or screen automation breaks IRCTC rules and can get the account blocked. So login, CAPTCHA, Aadhaar OTP, passenger submit and payment stay with the user; the agent does everything around them. A browser also can't open another app without a tap, so the launch button needs one tap.
 
 ## Known limits
 - No free official API for live seat availability, so it is not shown.
